@@ -1,0 +1,199 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Comparing Functions - Criterion.rs Documentation</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="User Guide and Other Prose Documentation For Criterion.rs">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <base href="../">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch JQuery from CDN but have a local fallback -->
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script>
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
+        <script src="store.js"></script>
+
+    </head>
+    <body class="light">
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme = store.get('mdbook-theme');
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            $('body').removeClass().addClass(theme);
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = store.get('mdbook-sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li><a href="./criterion_rs.html"><strong>1.</strong> Criterion.rs</a></li><li><ul class="section"><li><a href="./getting_started.html"><strong>1.1.</strong> Getting Started</a></li></ul></li><li><a href="./user_guide/user_guide.html"><strong>2.</strong> User Guide</a></li><li><ul class="section"><li><a href="./user_guide/migrating_from_libtest.html"><strong>2.1.</strong> Migrating from libtest</a></li><li><a href="./user_guide/command_line.html"><strong>2.2.</strong> Command-Line Output</a></li><li><a href="./user_guide/plots_and_graphs.html"><strong>2.3.</strong> Plots &amp; Graphs</a></li><li><a href="./user_guide/benchmarking_with_inputs.html"><strong>2.4.</strong> Benchmarking With Inputs</a></li><li><a href="./user_guide/comparing_functions.html" class="active"><strong>2.5.</strong> Comparing Functions</a></li><li><a href="./user_guide/external_programs.html"><strong>2.6.</strong> Benchmarking External Programs</a></li></ul></li><li><a href="./analysis.html"><strong>3.</strong> Analysis Process</a></li><li><a href="./faq.html"><strong>4.</strong> Frequently Asked Questions</a></li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page" tabindex="-1">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div class="left-buttons">
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                    </div>
+
+                    <h1 class="menu-title">Criterion.rs Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="content" class="content">
+                    <a class="header" href="./user_guide/comparing_functions.html#comparing-functions" id="comparing-functions"><h1>Comparing Functions</h1></a>
+<p>Criterion.rs can automatically benchmark multiple implementations of a function and produce summary graphs to show the differences in performance between them. First, lets create a comparison benchmark.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn fibonacci_slow(n: u64) -&gt; u64 {
+    match n {
+        0 =&gt; 1,
+        1 =&gt; 1,
+        n =&gt; fibonacci_slow(n-1) + fibonacci_slow(n-2),
+    }
+}
+
+fn fibonacci_fast(n: u64) -&gt; u64 {
+    let mut a = 0u64;
+    let mut b = 1u64;
+    let mut c = 0u64;
+
+    if n == 0 {
+        return 0
+    }
+
+    for _ in 0..(n+1) {
+        c = a + b;
+        a = b;
+        b = c;
+    }
+    return b;
+}
+#}</code></pre></pre>
+<p>These are the same two fibonacci functions from the <a href="./getting_started.html">Getting Started</a> page. The difference here is that we import the <a href="http://japaric.github.io/criterion.rs/criterion/struct.Fun.html">Fun type</a> as well.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+fn fibonaccis(c: &amp;mut Criterion) {
+    let fib_slow = Fun::new(&quot;Recursive&quot;, |b, i| b.iter(|| fibonacci_slow(*i)));
+    let fib_fast = Fun::new(&quot;Iterative&quot;, |b, i| b.iter(|| fibonacci_fast(*i)));
+#}</code></pre></pre>
+<p>Here, we create two benchmark functions which simply call our two Fibonacci implementations. Notice that the closure takes two arguments - b is the Bencher as in other examples, and i is the input parameter to be given to the benchmarked function.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+    let functions = vec!(fib_slow, fib_fast);
+    
+    c.bench_functions(&quot;Fibonacci&quot;, functions, &amp;20);
+}
+#}</code></pre></pre>
+<p>Finally, we construct a Vec of the benchmark functions and run the benchmark. This performs two benchmarks (&quot;Fibonacci/Recursive&quot; and &quot;Fibonacci/Iterative&quot;) which individually behave the same as other benchmarks seen earlier. In addition to the usual set of plots generated for each individual benchmark, this will generate a set of summary plots at <code>.criterion/$BENCHMARK/Summary</code> highlighting the differences between the functions.</p>
+<a class="header" href="./user_guide/comparing_functions.html#meansmediansslopes" id="meansmediansslopes"><h2>Means/Medians/Slopes</h2></a>
+<p><img src="./user_guide/means_compare.svg" alt="Means Chart" /></p>
+<p>These charts show the absolute and relative differences in the appropriate statistics between the implementations. Here we can see that the recursive implementation took 40 microseconds per iteration, which is 1665 times slower than the iterative implementation.</p>
+<a class="header" href="./user_guide/comparing_functions.html#violin-plot" id="violin-plot"><h2>Violin Plot</h2></a>
+<p><img src="./user_guide/violin_plot.svg" alt="Violin Plot" /></p>
+<p>The <a href="https://en.wikipedia.org/wiki/Violin_plot">Violin Plot</a> shows the median times and the PDF of each implementation.</p>
+
+                </div>
+
+                <!-- Mobile navigation buttons -->
+                
+                    <a rel="prev" href="./user_guide/benchmarking_with_inputs.html" class="mobile-nav-chapters previous" title="Previous chapter">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="./user_guide/external_programs.html" class="mobile-nav-chapters next" title="Next chapter">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+
+            </div>
+
+            
+                <a href="./user_guide/benchmarking_with_inputs.html" class="nav-chapters previous" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+
+            
+                <a href="./user_guide/external_programs.html" class="nav-chapters next" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+            
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if ($(".fa").css("font-family") !== "FontAwesome") {
+                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            }
+        </script>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        
+
+        
+
+        
+
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Frequently Asked Questions - Criterion.rs Documentation</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="User Guide and Other Prose Documentation For Criterion.rs">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <base href="">
+
+        <link rel="stylesheet" href="book.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <link rel="shortcut icon" href="favicon.png">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme -->
+        
+
+        
+
+        <!-- Fetch Clipboard.js from CDN but have a local fallback -->
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.6.1/clipboard.min.js"></script>
+        <script>
+            if (typeof Clipboard == 'undefined') {
+                document.write(unescape("%3Cscript src='clipboard.min.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch JQuery from CDN but have a local fallback -->
+        <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <script>
+            if (typeof jQuery == 'undefined') {
+                document.write(unescape("%3Cscript src='jquery.js'%3E%3C/script%3E"));
+            }
+        </script>
+
+        <!-- Fetch store.js from local - TODO add CDN when 2.x.x is available on cdnjs -->
+        <script src="store.js"></script>
+
+    </head>
+    <body class="light">
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme = store.get('mdbook-theme');
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            $('body').removeClass().addClass(theme);
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var sidebar = store.get('mdbook-sidebar');
+            if (sidebar === "hidden") { $("html").addClass("sidebar-hidden") }
+            else if (sidebar === "visible") { $("html").addClass("sidebar-visible") }
+        </script>
+
+        <div id="sidebar" class="sidebar">
+            <ul class="chapter"><li><a href="./criterion_rs.html"><strong>1.</strong> Criterion.rs</a></li><li><ul class="section"><li><a href="./getting_started.html"><strong>1.1.</strong> Getting Started</a></li></ul></li><li><a href="./user_guide/user_guide.html"><strong>2.</strong> User Guide</a></li><li><ul class="section"><li><a href="./user_guide/migrating_from_libtest.html"><strong>2.1.</strong> Migrating from libtest</a></li><li><a href="./user_guide/command_line.html"><strong>2.2.</strong> Command-Line Output</a></li><li><a href="./user_guide/plots_and_graphs.html"><strong>2.3.</strong> Plots &amp; Graphs</a></li><li><a href="./user_guide/benchmarking_with_inputs.html"><strong>2.4.</strong> Benchmarking With Inputs</a></li><li><a href="./user_guide/comparing_functions.html"><strong>2.5.</strong> Comparing Functions</a></li><li><a href="./user_guide/external_programs.html"><strong>2.6.</strong> Benchmarking External Programs</a></li></ul></li><li><a href="./analysis.html"><strong>3.</strong> Analysis Process</a></li><li><a href="./faq.html" class="active"><strong>4.</strong> Frequently Asked Questions</a></li></ul>
+        </div>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page" tabindex="-1">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div class="left-buttons">
+                        <i id="sidebar-toggle" class="fa fa-bars" title="Toggle sidebar"></i>
+                        <i id="theme-toggle" class="fa fa-paint-brush" title="Change theme"></i>
+                    </div>
+
+                    <h1 class="menu-title">Criterion.rs Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html">
+                            <i id="print-button" class="fa fa-print" title="Print this book"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div id="content" class="content">
+                    <a class="header" href="./faq.html#frequently-asked-questions" id="frequently-asked-questions"><h2>Frequently Asked Questions</h2></a>
+<a class="header" href="./faq.html#how-should-i-run-criterionrs-benchmarks-in-a-ci-pipeline" id="how-should-i-run-criterionrs-benchmarks-in-a-ci-pipeline"><h3>How Should I Run Criterion.rs Benchmarks In A CI Pipeline?</h3></a>
+<p>Criterion.rs benchmarks can be run as part of a CI pipeline just as they
+normally would on the command line - simply run <code>cargo bench</code>.</p>
+<p>To compare the master branch to a pull request, you could run the benchmarks on
+the master branch to set a baseline, then run them again with the pull request
+branch. An example script for Travis-CI might be:</p>
+<pre><code class="language-bash">#!/usr/bin/env bash
+
+if [ &quot;${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}&quot; != &quot;master&quot; ] &amp;&amp; [ &quot;$TRAVIS_RUST_VERSION&quot; == &quot;nightly&quot; ]; then
+    REMOTE_URL=&quot;$(git config --get remote.origin.url)&quot;;
+    cd ${TRAVIS_BUILD_DIR}/.. &amp;&amp; \
+    git clone ${REMOTE_URL} &quot;${TRAVIS_REPO_SLUG}-bench&quot; &amp;&amp; \
+    cd  &quot;${TRAVIS_REPO_SLUG}-bench&quot; &amp;&amp; \
+    # Bench master
+    git checkout master &amp;&amp; \
+    cargo bench &amp;&amp; \
+    # Bench pull request
+    git checkout ${TRAVIS_COMMIT} &amp;&amp; \
+    cargo bench;
+fi
+</code></pre>
+<p>(Thanks to <a href="https://beachape.com/blog/2016/11/02/rust-performance-testing-on-travis-ci/">BeachApe</a> for the script on which this is based.)</p>
+<p>Note that cloud CI providers like Travis-CI and Appveyor introduce a great deal
+of noise into the benchmarking process. For example, unpredictable load on the
+physical hosts of their build VM's. Benchmarks measured on such services tend
+to be unreliable, so you should be skeptical of the results. In particular,
+benchmarks that detect performance regressions should not cause the build to
+fail, and apparent performance regressions should be verified manually before
+rejecting a pull request.</p>
+<a class="header" href="./faq.html#cargo-bench------verbose-panics" id="cargo-bench------verbose-panics"><h3><code>cargo bench -- --verbose</code> Panics</h3></a>
+<p>This occurs because the <code>libtest</code> benchmark harness implicitly added to your
+crate is executing before the Criterion.rs benchmarks, and it panics when
+presented with a command-line argument it doesn't expect. There are two ways to
+work around this at present:</p>
+<p>You could run only your Criterion benchmark, like so:</p>
+<p><code>cargo bench --bench my_benchmark -- --verbose</code></p>
+<p>Note that <code>my_benchmark</code> here corresponds to the name of your benchmark in your
+<code>Cargo.toml</code> file.</p>
+<p>Another option is to disable benchmarks for your lib or app crate. For example,
+for library crates, you could add this to your <code>Cargo.toml</code> file:</p>
+<pre><code class="language-toml">[lib]
+bench = false
+</code></pre>
+<p>Of course, this only works if you define all of your benchmarks in the
+<code>benches</code> directory.</p>
+<p>See <a href="https://github.com/rust-lang/rust/issues/47241">Rust Issue #47241</a> for
+more details.</p>
+
+                </div>
+
+                <!-- Mobile navigation buttons -->
+                
+                    <a rel="prev" href="./analysis.html" class="mobile-nav-chapters previous" title="Previous chapter">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+
+            </div>
+
+            
+                <a href="./analysis.html" class="nav-chapters previous" title="You can navigate through the chapters using the arrow keys">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+            
+
+            
+
+        </div>
+
+
+        <!-- Local fallback for Font Awesome -->
+        <script>
+            if ($(".fa").css("font-family") !== "FontAwesome") {
+                $('<link rel="stylesheet" type="text/css" href="_FontAwesome/css/font-awesome.css">').prependTo('head');
+            }
+        </script>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        
+
+        
+
+        
+
+        
+
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS script -->
+        
+
+    </body>
+</html>
